@@ -2,7 +2,6 @@ namespace NodeController.GUI {
     using ColossalFramework;
     using TrafficManager.API.Manager;
     using TrafficManager.API.Traffic.Data;
-    using TrafficManager.Manager.Impl;
     using UnityEngine;
     using KianCommons;
     using Log = KianCommons.Log;
@@ -33,6 +32,9 @@ namespace NodeController.GUI {
             TrafficManager.API.Implementations.ManagerFactory.TrafficPriorityManager;
         public static IJunctionRestrictionsManager JRMan =>
             TrafficManager.API.Implementations.ManagerFactory.JunctionRestrictionsManager;
+
+        public static IExtSegmentEndManager ExtSegmentEndManager =>
+            TrafficManager.API.Implementations.ManagerFactory.ExtSegmentEndManager;
 
         // are sprites click-able?
         private readonly bool handleClick_;
@@ -70,8 +72,8 @@ namespace NodeController.GUI {
                                bool startNode,
                                int signsPerRow,
                                float baseZoom) {
-                int segmentEndIndex = ExtSegmentEndManager.Instance.GetIndex(segmentId, startNode);
-                ref ExtSegmentEnd segmentEnd = ref ExtSegmentEndManager.Instance.ExtSegmentEnds[segmentEndIndex];
+                int segmentEndIndex = ExtSegmentEndManager.GetIndex(segmentId, startNode);
+                ref ExtSegmentEnd segmentEnd = ref ExtSegmentEndManager.ExtSegmentEnds[segmentEndIndex];
 
                 dirX_ = (segmentEnd.LeftCorner - segmentEnd.RightCorner).normalized;
 
@@ -238,7 +240,6 @@ namespace NodeController.GUI {
                 // NetManager netManager = Singleton<NetManager>.instance;
                 Color guiColor = GUI.color;
                 // Vector3 nodePos = Singleton<NetManager>.instance.m_nodes.m_buffer[nodeId].m_position;
-                IExtSegmentEndManager segEndMan = ExtSegmentEndManager.Instance;
 
                 for (int i = 0; i < 8; ++i) {
                     ushort segmentId2 = nodeId.ToNode().GetSegment(i);
@@ -251,8 +252,8 @@ namespace NodeController.GUI {
                     bool isStartNode =
                         (bool)NetUtil.IsStartNode(segmentId2, nodeId);
 
-                    bool isIncoming = segEndMan
-                                      .ExtSegmentEnds[segEndMan.GetIndex(segmentId2, isStartNode)]
+                    bool isIncoming = ExtSegmentEndManager
+                                      .ExtSegmentEnds[ExtSegmentEndManager.GetIndex(segmentId2, isStartNode)]
                                       .incoming;
 
                     NetInfo segmentInfo = Singleton<NetManager>
