@@ -1,10 +1,21 @@
 using HarmonyLib;
 using KianCommons;
 using System;
+using TrafficManager.API.Manager;
+using TrafficManager.API.Traffic.Enums;
 using UnityEngine;
 
 namespace NodeController.Util {
     public static class TMPEUtils {
+        public static ITrafficLightManager TL =>
+            TrafficManager.API.Implementations.ManagerFactory.TrafficLightManager;
+
+        internal static void TryEnableTL(ushort nodeID) {
+            if (TL.GetTrafficLight(nodeID) == TrafficLightType.None && TL.CanToggleTrafficLight(nodeID)) {
+                TL.ToggleTrafficLight(nodeID);
+            }
+        }
+
         internal static bool WorldToScreenPoint(Vector3 worldPos, out Vector3 screenPos) {
             screenPos = Camera.main.WorldToScreenPoint(worldPos);
             screenPos.y = Screen.height - screenPos.y;

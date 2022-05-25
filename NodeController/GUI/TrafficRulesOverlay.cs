@@ -9,6 +9,7 @@ namespace NodeController.GUI {
     using ColossalFramework.Math;
     using System;
     using TrafficManager.API.UI;
+    using TrafficManager.API.Traffic.Enums;
 
 
     /// <summary>
@@ -22,8 +23,8 @@ namespace NodeController.GUI {
         private const float VIEW_SIZE_RATIO = 0.8f;
 
 
-        public static IRoadSignTheme ActiveTheme =>
-            TrafficManager.API.Implementations.ActiveTheme;
+        public static ITheme ActiveTheme =>
+            TrafficManager.API.Implementations.UIFactory.ActiveTheme;
         public static ITrafficLightSimulationManager TTL =>
             TrafficManager.API.Implementations.ManagerFactory.TrafficLightSimulationManager;
         public static ITrafficLightManager TL =>
@@ -289,7 +290,7 @@ namespace NodeController.GUI {
                             handleClick: configurable && handleClick_,
                             camPos: ref camPos,
                             guiColor: guiColor,
-                            signTexture: ActiveTheme.UTurn(allowed));
+                            signTexture: ActiveTheme.JunctionRestriction(JunctionRestrictionFlags.AllowUTurn, allowed));
 
                         if (signHovered && handleClick_ && configurable) {
                             isAnyHovered = true;
@@ -326,7 +327,7 @@ namespace NodeController.GUI {
                             handleClick: configurable && handleClick_,
                             camPos: ref camPos,
                             guiColor: guiColor,
-                            signTexture: ActiveTheme.EnterBlockedJunction(allowed));
+                            signTexture: ActiveTheme.JunctionRestriction(JunctionRestrictionFlags.AllowEnterWhenBlocked, allowed));
 
                         if (signHovered && this.handleClick_ && configurable) {
                             isAnyHovered = true;
@@ -376,7 +377,7 @@ namespace NodeController.GUI {
                             handleClick: configurable && handleClick_,
                             camPos: ref camPos,
                             guiColor: guiColor,
-                            signTexture: ActiveTheme.Crossing(allowed));
+                            signTexture: ActiveTheme.JunctionRestriction(JunctionRestrictionFlags.AllowPedestrianCrossing, allowed));
 
                         if (signHovered && this.handleClick_ && configurable) {
                             isAnyHovered = true;
@@ -399,19 +400,11 @@ namespace NodeController.GUI {
                 #region traffic light
                 {
                     // draw "entering blocked junctions allowed" sign at (0; 1)
-                    bool enabled = TL.HasTrafficLight(nodeId);
-                    bool configurable = TL.CanSetTrafficLight(nodeId, !enabled);
+                    var tl = TL.GetTrafficLight(nodeId);
+                    bool configurable = TL.CanToggleTrafficLight(nodeId);
 
                     try {
-                        Texture2D overlayTex;
-                        if (TTL.HasTimedSimulation(nodeId)) {
-                            bool active = TTL.HasActiveTimedSimulation(nodeId);
-                            overlayTex = ActiveTheme.TimedTrafficLights(paused: !active);
-                        } else { 
-                            // Render traffic light icon
-                            overlayTex = ActiveTheme.TrafficLights(enabled);
-                        } 
-
+                        Texture2D overlayTex = ActiveTheme.TrafficLights(tl);
                         bool signHovered = DrawTrafficLightSign(
                             nodeId: nodeId,
                             baseZoom: TMPEUtils.GetBaseZoom(),
@@ -425,7 +418,7 @@ namespace NodeController.GUI {
 
                             if (CheckClicked) {
                                 Log.Debug($"calling ToggleTrafficLight() for {nodeId} ...");
-                                TL.SetTrafficLight(nodeId, !enabled);
+                                TL.ToggleTrafficLight(nodeId);
                                 stateUpdated = true;
                             }
                         }

@@ -3,6 +3,8 @@ namespace NodeController {
     using CSUtil.Commons;
     using KianCommons;
     using TrafficManager.API.Manager;
+    using TrafficManager.API.Traffic.Enums;
+    using NodeController.Util;
 
     [HarmonyPatch(typeof(RoadBaseAI))]
     [HarmonyPatch(nameof(RoadBaseAI.UpdateNodeFlags))]
@@ -16,8 +18,8 @@ namespace NodeController {
 
             if (nodeData == null) return;
 
-            if (nodeData.FirstTimeTrafficLight && TL.CanSetTrafficLight(nodeID, true)) {
-                TL.SetTrafficLight(nodeID, true);
+            if (nodeData.FirstTimeTrafficLight) {
+                TMPEUtils.TryEnableTL(nodeID);
                 nodeData.FirstTimeTrafficLight = false;
             } else if (nodeData.CanHaveTrafficLights(out _) == TernaryBool.False) {
                 data.m_flags &= ~NetNode.Flags.TrafficLights;
